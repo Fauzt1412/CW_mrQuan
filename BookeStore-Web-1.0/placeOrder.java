@@ -87,10 +87,10 @@ public class placeOrder {
     
     private void initializeBooks() {
         // Initialize with some sample books
-        booksList.add(new books("Book A", "Author A", 10.99, 5, 1));
-        booksList.add(new books("Book B", "Author B", 12.99, 3, 2));
-        booksList.add(new books("Book C", "Author C", 15.99, 7, 3));
-        booksList.add(new books("Book D", "Author D", 8.99, 2, 4));
+        booksList.add(new books("Artists' master series", "Alot", 45.00, 5, 1));
+        booksList.add(new books("The Full Stack Developer", "Chris Northwood", 25.99, 5, 2));
+        booksList.add(new books("Learn to Program with Assembly", "Jonathan Bartlett", 60.00, 7, 3));
+        booksList.add(new books("Design patterns explained", "Alan Shalloway", 10.99, 4, 4));
     }
     
     private void createOrder() {
