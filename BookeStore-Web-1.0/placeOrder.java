@@ -1,5 +1,5 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayList; // good for extend
+import java.util.List; // was used but no longer user but safer choices
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.Scanner;

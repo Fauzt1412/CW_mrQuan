@@ -31,7 +31,7 @@ This implementation fulfills all requirements from the project specification:
 cd BookeStore-Web-1.0
 javac *.java models/*.java
 mkdir -p Compile #Creating new directory
-javac -d classes *.java models/*.java # Compile all Java files and place .class files in Compile directory
+javac -d Compile *.java models/*.java # Compile all Java files and place .class files in Compile directory
 ```
 mv *.class  test/
 
