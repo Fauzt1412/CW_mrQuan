@@ -7,7 +7,8 @@ public class Menu{
     
     public static void displayMenu() {
         System.out.println("\n=== BookStore Management System ===");
-        
+        placeOrder.initializeBooks();
+
         if (UserManager.isLoggedIn()) {
             System.out.println("Welcome, " + UserManager.getCurrentUserName() + " (" + UserManager.getCurrentUserRole().getDisplayName() + ")!");
             System.out.println("Please select an option:");
@@ -20,7 +21,7 @@ public class Menu{
             } else {
                 System.out.println("5. Display My Orders");
             }
-            System.out.println("6. Order History (Stack ADT)");
+            System.out.println("6. Order History");
             System.out.println("7. Logout");
             System.out.println("8. Exit");
         } else {
@@ -74,7 +75,7 @@ public class Menu{
                         }
                         break;
                     case 6:
-                        System.out.println("\n=== Order History (Stack ADT) ===");
+                        System.out.println("\n=== Order History ===");
                         placeOrder.displayOrderHistory();
                         break;
                     case 7:

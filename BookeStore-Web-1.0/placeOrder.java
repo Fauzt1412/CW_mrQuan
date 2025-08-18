@@ -1,7 +1,5 @@
 import java.util.ArrayList; // good for extend
-import java.util.List; // was used but no longer user but safer choices
-import java.util.Queue;
-import java.util.LinkedList;
+import java.util.List; // was used but no longer used but safer choices
 import java.util.Scanner;
 import models.books;
 import models.Orders;
@@ -10,21 +8,14 @@ import java.util.UUID;
 public class placeOrder {
     private static ArrayList<Orders> ordersList = new ArrayList<>();
     private static ArrayList<books> booksList = new ArrayList<>();
-    private static Queue<Orders> orderQueue = new LinkedList<>();
-    private static OrderHistoryStack orderHistory = new OrderHistoryStack(); // Stack ADT for order history
     private static Scanner scanner = new Scanner(System.in);
-    private static boolean booksInitialized = false; // Flag to prevent duplicate initialization
-        
+    private static boolean booksInitialized = false;
     public placeOrder() {
         if (!UserManager.isLoggedIn()) {
             System.out.println("You must be logged in to place orders.");
             return;
         }
         
-        if (!booksInitialized) {
-            initializeBooks();
-            booksInitialized = true;
-        }
         createOrder();
     }
     
@@ -85,12 +76,16 @@ public class placeOrder {
         }
     }
     
-    private void initializeBooks() {
-        // Initialize with some sample books
-        booksList.add(new books("Artists' master series", "Alot", 45.00, 5, 1));
-        booksList.add(new books("The Full Stack Developer", "Chris Northwood", 25.99, 5, 2));
-        booksList.add(new books("Learn to Program with Assembly", "Jonathan Bartlett", 60.00, 7, 3));
-        booksList.add(new books("Design patterns explained", "Alan Shalloway", 10.99, 4, 4));
+    public static void initializeBooks() {
+        // Only initialize books once to prevent duplication
+        if (!booksInitialized) {
+            // Initialize with some sample books
+            booksList.add(new books("Artists' master series", "Alot", 45.00, 5, 1));
+            booksList.add(new books("The Full Stack Developer", "Chris Northwood", 25.99, 5, 2));
+            booksList.add(new books("Learn to Program with Assembly", "Jonathan Bartlett", 60.00, 7, 3));
+            booksList.add(new books("Design patterns explained", "Alan Shalloway", 10.99, 4, 4));
+            booksInitialized = true;
+        }
     }
     
     private void createOrder() {
@@ -196,18 +191,14 @@ public class placeOrder {
         order.setTotalAmount(totalAmount);
         order.setTotalPrice(totalPrice);
         
-        orderQueue.offer(order);
         ordersList.add(order);
-        orderHistory.push(order); // Add to Stack ADT for history tracking
         
         System.out.println("Order placed successfully!");
         System.out.println("Order ID: " + order.getOrderId());
         System.out.println("Book IDs in order: " + order.getBookIds());
         System.out.println("Total: $" + order.getTotalPrice());
         // System.out.println("\n=== DATA STRUCTURES USED ===");
-        // System.out.println("Queue (FIFO): Order added to processing queue");
         // System.out.println("ArrayList: Order stored in main list");
-        // System.out.println("Stack (LIFO): Order added to history stack");
     }
     
     private books findBookById(int bookId) {
@@ -220,25 +211,49 @@ public class placeOrder {
     }
     
 
-    // Note: Order processing functionality removed as per user request
+    // Note: Order processing functionality removed
     // Orders are automatically processed when placed
     
     /**
-     * Display order history using Stack ADT (LIFO)
-     * Demonstrates Stack operations: peek, isEmpty, size
+     * Display order history using simple list display
+     * Shows all orders in chronological order (most recent last)
      */
     public static void displayOrderHistory() {
-        System.out.println("\n=== ORDER HISTORY (Stack ADT - LIFO) ===");
-        orderHistory.displayHistory();
-        orderHistory.getStackInfo();
-    }
-    
-    /**
-     * Get the order history stack for external access
-     * @return OrderHistoryStack instance
-     */
-    public static OrderHistoryStack getOrderHistory() {
-        return orderHistory;
+        if (!UserManager.isLoggedIn()) {
+            System.out.println("You must be logged in to view order history.");
+            return;
+        }
+        
+        String currentUserName = UserManager.getCurrentUserName();
+        ArrayList<Orders> userOrders = new ArrayList<>();
+        
+        // Get user's orders or all orders if admin
+        if (UserManager.isCurrentUserAdmin()) {
+            userOrders = ordersList;
+            System.out.println("\n=== ALL ORDER HISTORY (Administrator View) ===");
+        } else {
+            for (Orders order : ordersList) {
+                if (order.getCustomerName().equals(currentUserName)) {
+                    userOrders.add(order);
+                }
+            }
+            System.out.println("\n=== MY ORDER HISTORY ===");
+        }
+        
+        if (userOrders.isEmpty()) {
+            System.out.println("No order history available.");
+            return;
+        }
+        
+        System.out.println("Showing " + userOrders.size() + " order(s) in chronological order:");
+        
+        for (int i = 0; i < userOrders.size(); i++) {
+            Orders order = userOrders.get(i);
+            System.out.println((i + 1) + ". Order ID: " + order.getOrderId() + 
+                             " | Customer: " + order.getCustomerName() + 
+                             " | Total: $" + String.format("%.2f", order.getTotalPrice()));
+        }
+        System.out.println("=== END OF HISTORY ===");
     }
     
     public static ArrayList<Orders> getOrdersList() {
