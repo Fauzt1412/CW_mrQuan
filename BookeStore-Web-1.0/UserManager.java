@@ -19,10 +19,10 @@ public class UserManager {
         if (!usersInitialized) {
             // Add some default users (in real application, this would come from database)
             users.put("admin", new User("admin", "admin123", "Administrator", "admin@bookstore.com", UserRole.ADMIN));
-            users.put("john", new User("john", "john123", "John Doe", "john@email.com", UserRole.USER));
-            users.put("jane", new User("jane", "jane123", "Jane Smith", "jane@email.com", UserRole.USER));
-            users.put("bob", new User("bob", "bob123", "Bob Johnson", "bob@email.com", UserRole.USER));
-            users.put("alice", new User("alice", "alice123", "Alice Brown", "alice@email.com", UserRole.USER));
+            users.put("john", new User("john", "john123", "John Smith", "john@email.com", UserRole.USER));
+            users.put("jane", new User("jane", "jane123", "Jane Doe", "jane@email.com", UserRole.USER));
+            users.put("bob", new User("bob", "bob123", "Bob Dylan", "bob@email.com", UserRole.USER));
+
             usersInitialized = true;
         }
     }
