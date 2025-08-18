@@ -34,11 +34,10 @@ public class UserManager {
     public static boolean login() {
         System.out.println("\n=== LOGIN TO BOOKSTORE ===");
         System.out.println("Available demo accounts:");
-        System.out.println("Username: admin, Password: admin123 (Administrator - can see all orders)");
+        System.out.println("Username: admin, Password: admin123 (Administrator)");
         System.out.println("Username: john,  Password: john123 (Regular User)");
         System.out.println("Username: jane,  Password: jane123 (Regular User)");
         System.out.println("Username: bob,   Password: bob123 (Regular User)");
-        System.out.println("Username: alice, Password: alice123 (Regular User)");
         System.out.println("========================");
 
         System.out.print("Enter username: ");
