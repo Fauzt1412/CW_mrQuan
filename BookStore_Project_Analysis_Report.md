@@ -18,16 +18,30 @@ The BookStore Management System is a comprehensive Java console application desi
 
 #### Use Case Diagram
 
-```
-                    BookStore Management System
-                           
-    Customer                                    Admin
-       |                                         |
-       |-- View Products (Books)                 |-- CRUD Operations for Books
-       |-- Place Order                           |-- Order Management
-       |-- View Order History                    |-- Update Order Status
-       |-- Search Books                          |-- View All Orders
-       |-- Sort Orders                           |-- User Management
+```mermaid
+graph TB
+    subgraph "BookStore Management System"
+        Customer[Customer]
+        Admin[Admin]
+        
+        Customer --> ViewBooks[View Products/Books]
+        Customer --> PlaceOrder[Place Order]
+        Customer --> ViewMyOrders[View My Orders]
+        Customer --> SearchBooks[Search Books]
+        Customer --> SearchMyOrders[Search My Orders]
+        Customer --> SortMyOrders[Sort My Orders]
+        Customer --> CheckOrderStatus[Check Order Status]
+        Customer --> ViewOrderHistory[View Order History]
+        
+        Admin --> ViewAllOrders[View All Orders]
+        Admin --> ProcessOrders[Process Orders]
+        Admin --> ViewBooks
+        Admin --> SearchBooks
+        Admin --> SearchAllOrders[Search All Orders]
+        Admin --> SortAllOrders[Sort All Orders]
+        Admin --> ViewOrderHistory
+        Admin --> ManageQueue[Manage Order Queue]
+    end
 ```
 
 **Actors:**
@@ -38,18 +52,21 @@ The BookStore Management System is a comprehensive Java console application desi
 
 **Customer Use Cases:**
 - **View Products (Books)**: Browse available book inventory with details including title, author, price, and quantity
-- **Place Order**: Create new orders by selecting books and specifying quantities
-- **View Order History**: Access personal order history using Stack ADT implementation
+- **Place Order**: Create new orders by selecting books, specifying quantities, and providing shipping address
+- **View My Orders**: Access personal orders (both pending and completed)
 - **Search Functionality**: 
   - Search books by ID, title, or author
   - Search personal orders by order ID or book ID
 - **Sorting Functionality**: Sort personal orders using custom algorithms (Insertion Sort, Selection Sort)
+- **Check Order Status**: View current status of orders (pending/completed)
+- **Order History**: View completed orders in chronological order
 
 **Admin Use Cases:**
-- **CRUD Operations for Books**: Complete book inventory management (Create, Read, Update, Delete)
-- **Order Management**: View all system orders and update order status
-- **User Management**: Access to all user data and system-wide operations
+- **View All Orders**: Access to all system orders (pending and completed)
+- **Process Orders**: Manage order queue and process pending orders
+- **Order Management**: Update order status and manage order workflow
 - **Advanced Sorting**: Sort all orders in the system using various algorithms
+- **Queue Management**: Monitor and control order processing queue
 
 ---
 
@@ -63,15 +80,14 @@ The BookStore Management System is a comprehensive Java console application desi
 - **HashMap**: User authentication and session management
 - **ArrayList**: Primary storage for books and orders
 - **LinkedList Queue**: Order processing pipeline
-- **Custom Stack**: Order history tracking
 
 ### Data Structures
 
-The project demonstrates comprehensive implementation of various Abstract Data Types (ADTs) with their valid operations:
+The project demonstrates implementation of various Abstract Data Types (ADTs) with their valid operations:
 
 #### Array/ArrayList
 ```java
-private static ArrayList<Orders> ordersList = new ArrayList<>();
+private static ArrayList<Orders> processedOrders = new ArrayList<>();
 private static ArrayList<books> booksList = new ArrayList<>();
 ```
 
@@ -84,7 +100,7 @@ private static ArrayList<books> booksList = new ArrayList<>();
 - `isEmpty()`: O(1) - Check if collection is empty
 
 **Usage in Project:**
-- Primary storage for books and orders
+- Primary storage for books and processed orders
 - Dynamic resizing for growing collections
 - Index-based access for efficient retrieval
 
@@ -103,7 +119,7 @@ private static Queue<Orders> orderQueue = new LinkedList<>();
 **Usage in Project:**
 - FIFO (First-In-First-Out) order processing
 - Order pipeline management
-- Sequential order handling
+- Sequential order handling by administrators
 
 #### Queue
 The Queue ADT is implemented using LinkedList to provide FIFO behavior for order processing:
@@ -125,31 +141,6 @@ while (!orderQueue.isEmpty()) {
 }
 ```
 
-#### Custom Stack ADT (OrderHistoryStack)
-```java
-public class OrderHistoryStack {
-    private List<Orders> stack;
-    private static final int MAX_HISTORY = 10;
-}
-```
-
-**Valid Operations:**
-- `push(element)`: O(1) - Add element to top of stack
-- `pop()`: O(1) - Remove and return top element
-- `peek()`: O(1) - Return top element without removal
-- `isEmpty()`: O(1) - Check if stack is empty
-- `size()`: O(1) - Get number of elements
-
-**Special Features:**
-- **Bounded Stack**: Maximum 10 entries with automatic cleanup
-- **LIFO Behavior**: Last-In-First-Out order access
-- **Educational Implementation**: Demonstrates stack concepts with detailed documentation
-
-**Usage in Project:**
-- Order history tracking
-- Recent order access
-- Memory-efficient bounded storage
-
 ---
 
 ## III. Implementation & Important Algorithms
@@ -165,6 +156,7 @@ The system follows a modular architecture with clear separation of concerns:
 - Manages application flow and state transitions
 - Implements role-based menu display
 - Provides input validation and error handling
+- Supports both admin and regular user workflows
 
 **UserManager.java**: Authentication and session management
 - User login/logout functionality
@@ -172,7 +164,7 @@ The system follows a modular architecture with clear separation of concerns:
 - Session state management
 - User permission verification
 
-**Book.java**: Book entity model
+**books.java**: Book entity model
 ```java
 public class books {
     private int bookid;
@@ -186,7 +178,7 @@ public class books {
 - Provides getter/setter methods
 - Maintains inventory data integrity
 
-**Customer.java** (represented as User.java): User entity model
+**User.java**: User entity model
 ```java
 public class User {
     private String username;
@@ -201,16 +193,28 @@ public class User {
 - Profile information management
 
 **Orders.java**: Order entity model
+```java
+public class Orders {
+    private String orderId;
+    private String customerName;
+    private String shippingAddress;
+    private String bookTitle;
+    private int TotalAmount;
+    private double TotalPrice;
+    private List<Integer> bookIds;
+}
+```
 - Order information encapsulation
 - Multiple book support via List<Integer> bookIds
 - Order state management
-- Customer association
+- Customer association and shipping address
 
 **placeOrder.java**: Order processing and management
 - Order creation workflow
 - Inventory management
-- Multi-data structure integration
+- Queue-based order processing
 - Stock validation and updates
+- FIFO order processing for administrators
 
 **BookSearch.java**: Book search functionality
 - Multiple search criteria (ID, title, author)
@@ -227,11 +231,6 @@ public class User {
 - Selection Sort for descending order
 - Built-in TimSort for comparison
 
-**OrderHistoryStack.java**: Custom Stack ADT implementation
-- Educational stack demonstration
-- Bounded capacity management
-- LIFO operations with detailed documentation
-
 ### Project's Flow
 
 #### Application Startup Flow:
@@ -244,19 +243,28 @@ public class User {
 7. **Session Management**: Handle logout and session cleanup
 
 #### Order Processing Flow:
-```
-[User Login] → [View Books] → [Select Books] → [Specify Quantities] 
-     ↓
-[Validate Stock] → [Create Order] → [Update Inventory] → [Store in Multiple ADTs]
-     ↓
-[Queue: FIFO Processing] → [ArrayList: Indexed Storage] → [Stack: History Tracking]
+```mermaid
+flowchart TD
+    A[User Login] --> B[View Books]
+    B --> C[Select Books]
+    C --> D[Specify Quantities]
+    D --> E[Enter Shipping Address]
+    E --> F[Validate Stock]
+    F --> G[Create Order]
+    G --> H[Update Inventory]
+    H --> I[Add to Queue]
+    I --> J[Admin Processing]
+    J --> K[Move to Processed Orders]
 ```
 
 #### Search Operation Flow:
-```
-[Authentication Check] → [Permission Validation] → [Data Filtering] 
-     ↓
-[Search Execution] → [Result Processing] → [Display Results]
+```mermaid
+flowchart TD
+    A[Authentication Check] --> B[Permission Validation]
+    B --> C[Data Filtering]
+    C --> D[Search Execution]
+    D --> E[Result Processing]
+    E --> F[Display Results]
 ```
 
 ### Project's Important Algorithms
@@ -370,7 +378,6 @@ for (books book : booksList) {
 - **ArrayList Access**: O(1) - direct index access
 - **ArrayList Insertion**: O(1) amortized, O(n) worst case (array expansion)
 - **HashMap Operations**: O(1) average case for get/put operations
-- **Stack Operations**: O(1) - push, pop, peek operations
 - **Queue Operations**: O(1) - offer, poll, peek operations
 
 ### Space Complexity of Core Operations
@@ -379,7 +386,7 @@ for (books book : booksList) {
 - **User Storage**: O(u) where u = number of users in system
 - **Book Inventory**: O(b) where b = number of books in catalog
 - **Order Storage**: O(o×k) where o = number of orders, k = average books per order
-- **Order History Stack**: O(1) - bounded to maximum 10 entries
+- **Order Queue**: O(q) where q = number of pending orders
 - **Search Results**: O(r) where r = number of matching results
 
 #### Algorithm Space Complexity:
@@ -425,13 +432,18 @@ for (books book : booksList) {
 - **Data Validation**: Limited validation for business rule enforcement
 - **System Recovery**: No graceful degradation for system failures
 
+#### 8. **Missing Stack ADT Implementation**
+- **Current State**: No Stack ADT implementation found in the codebase
+- **Impact**: Order history is displayed using simple ArrayList iteration
+- **Educational Gap**: Missing demonstration of LIFO (Last-In-First-Out) operations
+
 ---
 
 ## V. Conclusion
 
 ### Final Thoughts About the Project
 
-The BookStore Management System successfully demonstrates a comprehensive understanding of fundamental computer science concepts and object-oriented programming principles. The project effectively implements multiple Abstract Data Types (ADTs) including ArrayList, LinkedList, Queue, and a custom Stack implementation, showcasing practical applications of data structures in real-world scenarios.
+The BookStore Management System successfully demonstrates a solid understanding of fundamental computer science concepts and object-oriented programming principles. The project effectively implements key Abstract Data Types (ADTs) including ArrayList, LinkedList, and Queue, showcasing practical applications of data structures in real-world scenarios.
 
 The implementation of custom sorting algorithms (Insertion Sort and Selection Sort) alongside Java's built-in TimSort provides valuable educational insight into algorithm performance characteristics and trade-offs. The role-based access control system demonstrates security awareness and proper separation of user privileges, while the modular architecture ensures maintainable and extensible code structure.
 
@@ -442,54 +454,71 @@ The project's strength lies in its educational value, clearly demonstrating core
 - **Security Implementation**: Basic authentication and authorization mechanisms
 - **User Experience Design**: Intuitive menu-driven interface with comprehensive error handling
 
+### Current Implementation Status
+
+Based on the code analysis, the system currently implements:
+
+#### ✅ **Successfully Implemented Features:**
+- **Queue ADT (FIFO)**: Order processing queue using LinkedList
+- **ArrayList**: Dynamic storage for orders and books
+- **HashMap**: User authentication system
+- **Custom Sorting Algorithms**: Insertion Sort and Selection Sort
+- **Linear Search**: Multiple search criteria implementation
+- **Role-Based Access Control**: Admin vs Regular User permissions
+- **Order Management**: Complete order lifecycle with shipping addresses
+
+#### ⚠️ **Missing/Modified Features:**
+- **Stack ADT**: No Stack implementation found in current codebase
+- **Order History**: Uses simple ArrayList iteration instead of Stack LIFO operations
+- **Simplified Architecture**: Removed some complexity mentioned in earlier documentation
+
 ### Future Improvements
 
-#### 1. **Database Integration**
+#### 1. **Complete ADT Implementation**
+- **Add Stack ADT**: Implement proper Stack for order history with LIFO operations
+- **Enhanced Queue Operations**: Add priority queue for order processing
+- **Custom Data Structures**: Implement additional ADTs for educational purposes
+
+#### 2. **Database Integration**
 - **Recommendation**: Implement JDBC connectivity with MySQL or PostgreSQL
 - **Benefits**: Persistent data storage, transaction management, data integrity
 - **Implementation**: Replace in-memory collections with database operations
 
-#### 2. **Enhanced Security Framework**
+#### 3. **Enhanced Security Framework**
 - **Password Encryption**: Implement BCrypt or similar hashing algorithms
 - **Session Management**: Add session tokens and timeout mechanisms
 - **Input Validation**: Comprehensive sanitization and validation framework
 - **Audit Logging**: Track user actions and system changes
 
-#### 3. **Performance Optimization**
+#### 4. **Performance Optimization**
 - **Search Indexing**: Implement HashMap-based indexing for O(1) lookups
 - **Algorithm Upgrade**: Replace O(n²) sorts with O(n log n) algorithms for large datasets
 - **Caching Strategy**: Implement result caching for frequently accessed data
 - **Lazy Loading**: Load data on-demand rather than all at startup
 
-#### 4. **User Interface Enhancement**
+#### 5. **User Interface Enhancement**
 - **Web Interface**: Develop REST API with modern web frontend
 - **Mobile Application**: Create mobile app for customer access
 - **GUI Application**: JavaFX or Swing desktop application
 - **API Documentation**: Comprehensive API documentation for integration
 
-#### 5. **Advanced Features**
+#### 6. **Advanced Features**
 - **Inventory Management**: Advanced stock tracking with reorder points
 - **Order Workflow**: Complex order states (pending, processing, shipped, delivered)
 - **Reporting System**: Analytics dashboard with sales reports and trends
 - **Notification System**: Email/SMS notifications for order updates
 
-#### 6. **System Architecture**
+#### 7. **System Architecture**
 - **Microservices**: Break down into smaller, independent services
 - **Message Queuing**: Implement asynchronous processing with message queues
 - **Load Balancing**: Support for multiple application instances
 - **Configuration Management**: External configuration files and environment variables
 
-#### 7. **Testing and Quality Assurance**
+#### 8. **Testing and Quality Assurance**
 - **Unit Testing**: Comprehensive JUnit test suite for all components
 - **Integration Testing**: End-to-end testing of complete workflows
 - **Performance Testing**: Load testing and performance benchmarking
 - **Code Quality**: Static analysis tools and code coverage metrics
-
-#### 8. **Documentation and Maintenance**
-- **API Documentation**: Swagger/OpenAPI documentation
-- **User Manual**: Comprehensive user guide and tutorials
-- **Developer Documentation**: Code documentation and architecture guides
-- **Deployment Guide**: Installation and configuration instructions
 
 The BookStore Management System serves as an excellent foundation for understanding enterprise application development principles and provides a solid base for implementing these advanced features in future iterations.
 
@@ -527,4 +556,4 @@ The BookStore Management System serves as an excellent foundation for understand
 
 ---
 
-*This report follows the Harvard referencing system as required and provides comprehensive analysis of the BookStore Management System implementation, demonstrating understanding of data structures, algorithms, and software engineering principles.*
+*This report follows the Harvard referencing system as required and provides comprehensive analysis of the BookStore Management System implementation, demonstrating understanding of data structures, algorithms, and software engineering principles. The analysis is based on the current state of the codebase as of the latest examination.*

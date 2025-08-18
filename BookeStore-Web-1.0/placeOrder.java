@@ -1,12 +1,14 @@
-import java.util.ArrayList; // good for extend
-import java.util.List; // was used but no longer used but safer choices
+import java.util.ArrayList; // for books inventory
+import java.util.Queue;
+import java.util.LinkedList;
 import java.util.Scanner;
 import models.books;
 import models.Orders;
 import java.util.UUID;
 
 public class placeOrder {
-    private static ArrayList<Orders> ordersList = new ArrayList<>();
+    private static Queue<Orders> orderQueue = new LinkedList<>();
+    private static ArrayList<Orders> processedOrders = new ArrayList<>(); // For completed orders
     private static ArrayList<books> booksList = new ArrayList<>();
     private static Scanner scanner = new Scanner(System.in);
     private static boolean booksInitialized = false;
@@ -27,23 +29,43 @@ public class placeOrder {
             return;
         }
         
-        if (ordersList.isEmpty()) {
-            System.out.println("No orders found in the system.");
-            return;
+        System.out.println("\n=== All Orders (Administrator View) ===");
+        
+        // Display pending orders in queue
+        if (!orderQueue.isEmpty()) {
+            System.out.println("\n--- PENDING ORDERS (In Queue) ---");
+            int count = 1;
+            for (Orders order : orderQueue) {
+                System.out.println(count + ". [PENDING] Order ID: " + order.getOrderId());
+                System.out.println("   Customer: " + order.getCustomerName());
+                System.out.println("   Books: " + order.getBookTitle());
+                System.out.println("   Total: $" + order.getTotalPrice());
+                System.out.println("   ---");
+                count++;
+            }
         }
         
-        System.out.println("\n=== All Orders (Administrator View) ===");
-        for (Orders order : ordersList) {
-            System.out.println("Order ID: " + order.getOrderId());
-            System.out.println("Customer: " + order.getCustomerName());
-            System.out.println("Shipping Address: " + order.getShippingAddress());
-            System.out.println("Books: " + order.getBookTitle());
-            System.out.println("Book IDs: " + order.getBookIds());
-            System.out.println("Total Amount: " + order.getTotalAmount());
-            System.out.println("Total Price: $" + order.getTotalPrice());
-            System.out.println("---");
+        // Display processed orders
+        if (!processedOrders.isEmpty()) {
+            System.out.println("\n--- PROCESSED ORDERS ---");
+            for (Orders order : processedOrders) {
+                System.out.println("[COMPLETED] Order ID: " + order.getOrderId());
+                System.out.println("Customer: " + order.getCustomerName());
+                System.out.println("Shipping Address: " + order.getShippingAddress());
+                System.out.println("Books: " + order.getBookTitle());
+                System.out.println("Book IDs: " + order.getBookIds());
+                System.out.println("Total Amount: " + order.getTotalAmount());
+                System.out.println("Total Price: $" + order.getTotalPrice());
+                System.out.println("---");
+            }
         }
-        System.out.println("Total orders in system: " + ordersList.size());
+        
+        if (orderQueue.isEmpty() && processedOrders.isEmpty()) {
+            System.out.println("No orders found in the system.");
+        } else {
+            System.out.println("Total pending orders: " + orderQueue.size());
+            System.out.println("Total processed orders: " + processedOrders.size());
+        }
     }
     
     public static void displayMyOrders() {
@@ -55,11 +77,28 @@ public class placeOrder {
         String currentUserName = UserManager.getCurrentUserName();
         boolean foundOrders = false;
         
-        System.out.println("\n=== My Orders " + currentUserName);
+        System.out.println("\n=== My Orders - " + currentUserName + " ===");
         
-        for (Orders order : ordersList) {
+        // Check pending orders in queue
+        System.out.println("\n--- PENDING ORDERS ---");
+        for (Orders order : orderQueue) {
             if (order.getCustomerName().equals(currentUserName)) {
-                System.out.println("Order ID: " + order.getOrderId());
+                System.out.println("[PENDING] Order ID: " + order.getOrderId());
+                System.out.println("Shipping Address: " + order.getShippingAddress());
+                System.out.println("Books: " + order.getBookTitle());
+                System.out.println("Book IDs: " + order.getBookIds());
+                System.out.println("Total Amount: " + order.getTotalAmount());
+                System.out.println("Total Price: $" + order.getTotalPrice());
+                System.out.println("---");
+                foundOrders = true;
+            }
+        }
+        
+        // Check processed orders
+        System.out.println("\n--- COMPLETED ORDERS ---");
+        for (Orders order : processedOrders) {
+            if (order.getCustomerName().equals(currentUserName)) {
+                System.out.println("[COMPLETED] Order ID: " + order.getOrderId());
                 System.out.println("Shipping Address: " + order.getShippingAddress());
                 System.out.println("Books: " + order.getBookTitle());
                 System.out.println("Book IDs: " + order.getBookIds());
@@ -191,14 +230,18 @@ public class placeOrder {
         order.setTotalAmount(totalAmount);
         order.setTotalPrice(totalPrice);
         
-        ordersList.add(order);
+        // Add order to queue for processing
+        orderQueue.offer(order);
         
-        System.out.println("Order placed successfully!");
+        System.out.println("Order placed successfully and added to processing queue!");
         System.out.println("Order ID: " + order.getOrderId());
         System.out.println("Book IDs in order: " + order.getBookIds());
         System.out.println("Total: $" + order.getTotalPrice());
-        // System.out.println("\n=== DATA STRUCTURES USED ===");
-        // System.out.println("ArrayList: Order stored in main list");
+        System.out.println("Status: PENDING (Position in queue: " + orderQueue.size() + ")");
+        System.out.println("\n=== DATA STRUCTURES USED ===");
+        System.out.println("Queue: Order added to processing queue (FIFO)");
+        System.out.println("\nNote: Your order is now in the processing queue.");
+        System.out.println("An administrator will process it soon. Check 'My Order Status' for updates.");
     }
     
     private books findBookById(int bookId) {
@@ -215,8 +258,27 @@ public class placeOrder {
     // Orders are automatically processed when placed
     
     /**
-     * Display order history using simple list display
-     * Shows all orders in chronological order (most recent last)
+     * Process the next order in the queue (FIFO)
+     */
+    public static void processNextOrder() {
+        if (orderQueue.isEmpty()) {
+            System.out.println("No orders in queue to process.");
+            return;
+        }
+        
+        Orders order = orderQueue.poll(); // Remove and get the first order
+        processedOrders.add(order); // Add to processed orders
+        
+        System.out.println("\n=== ORDER PROCESSED ===");
+        System.out.println("Order ID: " + order.getOrderId() + " has been processed and completed!");
+        System.out.println("Customer: " + order.getCustomerName());
+        System.out.println("Status: COMPLETED");
+        System.out.println("Remaining orders in queue: " + orderQueue.size());
+    }
+    
+    /**
+     * Display order history using processed orders
+     * Shows all completed orders in chronological order
      */
     public static void displayOrderHistory() {
         if (!UserManager.isLoggedIn()) {
@@ -227,12 +289,12 @@ public class placeOrder {
         String currentUserName = UserManager.getCurrentUserName();
         ArrayList<Orders> userOrders = new ArrayList<>();
         
-        // Get user's orders or all orders if admin
+        // Get user's processed orders or all processed orders if admin
         if (UserManager.isCurrentUserAdmin()) {
-            userOrders = ordersList;
+            userOrders = processedOrders;
             System.out.println("\n=== ALL ORDER HISTORY (Administrator View) ===");
         } else {
-            for (Orders order : ordersList) {
+            for (Orders order : processedOrders) {
                 if (order.getCustomerName().equals(currentUserName)) {
                     userOrders.add(order);
                 }
@@ -241,23 +303,43 @@ public class placeOrder {
         }
         
         if (userOrders.isEmpty()) {
-            System.out.println("No order history available.");
+            System.out.println("No completed order history available.");
             return;
         }
         
-        System.out.println("Showing " + userOrders.size() + " order(s) in chronological order:");
+        System.out.println("Showing " + userOrders.size() + " completed order(s) in chronological order:");
         
         for (int i = 0; i < userOrders.size(); i++) {
             Orders order = userOrders.get(i);
-            System.out.println((i + 1) + ". Order ID: " + order.getOrderId() + 
+            System.out.println((i + 1) + ". [COMPLETED] Order ID: " + order.getOrderId() + 
                              " | Customer: " + order.getCustomerName() + 
                              " | Total: $" + String.format("%.2f", order.getTotalPrice()));
         }
         System.out.println("=== END OF HISTORY ===");
     }
     
-    public static ArrayList<Orders> getOrdersList() {
-        return ordersList;
+    /**
+     * Get the current order queue status
+     */
+    public static void displayQueueStatus() {
+        System.out.println("\n=== ORDER QUEUE STATUS ===");
+        System.out.println("Orders pending in queue: " + orderQueue.size());
+        System.out.println("Orders completed: " + processedOrders.size());
+        
+        if (!orderQueue.isEmpty()) {
+            System.out.println("\nNext order to be processed:");
+            Orders nextOrder = orderQueue.peek();
+            System.out.println("Order ID: " + nextOrder.getOrderId());
+            System.out.println("Customer: " + nextOrder.getCustomerName());
+        }
+    }
+    
+    public static Queue<Orders> getOrderQueue() {
+        return orderQueue;
+    }
+    
+    public static ArrayList<Orders> getProcessedOrders() {
+        return processedOrders;
     }
     
     public static ArrayList<books> getBooksList() {

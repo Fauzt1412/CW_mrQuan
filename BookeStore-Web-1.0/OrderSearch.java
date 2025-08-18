@@ -1,5 +1,6 @@
 import models.Orders;
 import java.util.ArrayList;
+import java.util.Queue;
 import java.util.Scanner;
 
 /**
@@ -19,14 +20,22 @@ public class OrderSearch {
             return;
         }
         
-        ArrayList<Orders> ordersList = placeOrder.getOrdersList();
-        if (ordersList.isEmpty()) {
+        // Get both pending and processed orders
+        Queue<Orders> orderQueue = placeOrder.getOrderQueue();
+        ArrayList<Orders> processedOrders = placeOrder.getProcessedOrders();
+        
+        // Combine all orders for searching
+        ArrayList<Orders> allOrders = new ArrayList<>();
+        allOrders.addAll(orderQueue); // Add pending orders
+        allOrders.addAll(processedOrders); // Add processed orders
+        
+        if (allOrders.isEmpty()) {
             System.out.println("No orders found.");
             return;
         }
         
         // Filter orders based on user role
-        ArrayList<Orders> searchableOrders = getSearchableOrders(ordersList);
+        ArrayList<Orders> searchableOrders = getSearchableOrders(allOrders);
         if (searchableOrders.isEmpty()) {
             if (UserManager.isCurrentUserAdmin()) {
                 System.out.println("No orders found in the system.");
@@ -215,8 +224,20 @@ public class OrderSearch {
      * Display detailed information about an order
      */
     private static void displayOrderDetails(Orders order) {
+        // Determine order status
+        Queue<Orders> orderQueue = placeOrder.getOrderQueue();
+        ArrayList<Orders> processedOrders = placeOrder.getProcessedOrders();
+        
+        String status = "UNKNOWN";
+        if (orderQueue.contains(order)) {
+            status = "PENDING";
+        } else if (processedOrders.contains(order)) {
+            status = "COMPLETED";
+        }
+        
         System.out.println("\n--- Order Details ---");
         System.out.println("Order ID: " + order.getOrderId());
+        System.out.println("Status: " + status);
         System.out.println("Customer: " + order.getCustomerName());
         System.out.println("Books: " + order.getBookTitle());
         System.out.println("Book IDs: " + order.getBookIds());
